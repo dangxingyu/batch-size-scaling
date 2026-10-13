@@ -1,0 +1,30 @@
+# Directional branching (Section 6): one 128K MuonW base run (parent) with checkpoints every
+# 1000 steps, and 1024-step branches from each checkpoint that emulate a 16x larger batch with
+# sqrt learning-rate scaling, fixed per-update momentum and per-token matrix weight decay.
+# branch_steps is the default only; each branch task declares its own horizon.
+# Before the first run, replace (with absolute paths):
+#   <DATA_ROOT>   the directory that contains the fineweb10B/ folder of tokenized shards
+#                 (<LLM_DIR>/data after `python data/cached_fineweb10B.py`);
+#   <RECIPES_CSV> a recipe CSV (format in README.md) with one W,muon row at batch_tokens 131072,
+#                 the hyperparameters of the base run.
+schema: directional_cbs_v1
+seed: 1
+trajectory: true
+parent_steps: 13000
+schedule_steps: 13000
+anchor_interval: 1000
+branch_steps: 1024
+base_batch_tokens: 131072
+top_rank: 16
+lanczos_iterations: 128
+ritz_relative_tolerance: 0.01
+hessian_tokens: 131072
+validation_tokens: 10485760
+remainder_periods: [1, 2, 4, 8, 16]
+lr_powers: [0.5]
+curve_eval_interval: 250
+curve_eval_tokens: 1048576
+curve_holdout_shards: [fineweb_train_000001.bin]
+save_branch_checkpoint: false
+data_root: <DATA_ROOT>/fineweb10B
+recipes: <RECIPES_CSV>

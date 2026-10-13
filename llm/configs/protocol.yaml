@@ -1,0 +1,60 @@
+schema_version: 2
+name: modded-nanogpt-track3
+seed: 1
+model:
+  vocabulary_size: 50304
+  layers: 12
+  width: 768
+  heads: 6
+  head_dimension: 128
+  sequence_length: 1024
+  mlp_multiplier: 4
+  logit_softcap: 15.0
+data:
+  dataset: fineweb10B
+  train_glob: fineweb_train_*.bin
+  validation_glob: fineweb_val_*.bin
+  validation_tokens: 10485760
+  binary_magic: 20240520
+  binary_version: 1
+training:
+  reference_batch_tokens: 131072
+  token_horizon: 1703936000
+  batches: [131072, 524288, 1048576, 2097152]
+  gpus_per_case: 8
+  precision: bfloat16
+  validation_frequency: 125
+  final_validation_frequency: 25
+  final_validation_fraction: 0.9
+  gradient_reduction: sum
+  # Fixed (untuned) schedule profiles. KL-SOAP-W and all HyperBall runs use a
+  # full-run matrix cooldown; only the auxiliary cooldown is tuned.
+  # matrix_cooldown "auxiliary": the matrix group shares the recipe's aux_cooldown_frac.
+  schedule_profiles:
+    W/muon:    {matrix_cooldown: auxiliary, matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    W/klsoap:  {matrix_cooldown: full,      matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    W/shampoo: {matrix_cooldown: auxiliary, matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    W/adam:    {matrix_cooldown: auxiliary, matrix_warmup_steps: 250, matrix_warmup_mode: multiplicative, auxiliary_warmup_steps: 250, auxiliary_warmup_mode: multiplicative}
+    W/lion:    {matrix_cooldown: auxiliary, matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    H/muon:    {matrix_cooldown: full,      matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    H/klsoap:  {matrix_cooldown: full,      matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    H/shampoo: {matrix_cooldown: full,      matrix_warmup_steps: 0,   matrix_warmup_mode: none,           auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    H/adam:    {matrix_cooldown: full,      matrix_warmup_steps: 250, matrix_warmup_mode: exclusive,      auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+    H/lion:    {matrix_cooldown: full,      matrix_warmup_steps: 250, matrix_warmup_mode: exclusive,      auxiliary_warmup_steps: 0,   auxiliary_warmup_mode: none}
+  compile: true
+search:
+  improvement_threshold: 0.002
+  small_gain_upper_bound: 0.006
+  small_gain_repeats: 3
+  large_gain_repeats: 2
+  positive_factors: [0.5, 0.7071067811865476, 1.0, 1.4142135623730951, 2.0]
+  cooldown_values: [0.0, 0.2, 0.4, 0.6, 0.8]
+  weight_decay_values: [0.0, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 7.2, 8.0]
+runtime:
+  torch_minimum: "2.8"
+  output_root: runs
+  shampoo_source:
+    repository: https://github.com/KellerJordan/modded-nanogpt.git
+    commit: 7e65c226ddb695fb9752798e0c8fd4ee6bf7dced
+    subdirectory: records/track_3_optimization/results/20260513_shampoo_1_4_power
+    package_tree: 7fa7dbbf04ac2a82ae2181d1f1f70c137f15f8e8
